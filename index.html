@@ -303,16 +303,19 @@ function initializePeer() {
     
     errorBox.style.display = "none";
 
-    // Initialize with direct STUN servers to fix latency
-   peer = new Peer(user, {
+ // Initialize with direct STUN servers to fix latency
+peer = new Peer(user, {
     config: {
-            iceServers: [
-                { urls: 'stun:stun.cloudflare.com:3478' },
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        }
-    });
+        iceServers: [
+            { urls: ['stun:stun.cloudflare.com:3478'] },
+            { urls: ['stun:stun.l.google.com:19302'] },
+            { urls: ['stun:stun1.l.google.com:19302'] },
+            { urls: ['stun:stun.nextcloud.com:443'] },
+            { urls: ['stun:openrelay.metered.ca:80'] },
+            { urls: ['stun:openrelay.metered.ca:443'] }
+        ]
+    }
+});
 
     peer.on('open', (id) => {
         document.getElementById('my-id').innerText = id;
