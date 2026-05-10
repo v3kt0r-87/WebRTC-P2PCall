@@ -3,466 +3,341 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>P2P Call</title>
+<title>Pro P2P Audio</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
 <style>
-
-:root{
-    --bg:#0b0f14;
-    --card:#121821;
-    --card-border:#1e2632;
-    --input:#0f141c;
-    --text:#eef2f7;
-    --muted:#8b98ab;
-
-    --green:#22c55e;
-    --green-hover:#16a34a;
-
-    --red:#ef4444;
-    --red-hover:#dc2626;
-
-    --shadow:0 10px 30px rgba(0,0,0,.35);
+:root {
+    --bg: #05070a;
+    --glass: rgba(20, 26, 35, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --accent: #a855f7; /* Purple for a more anime vibe */
+    --text: #f0f2f5;
+    --muted: #94a3b8;
+    --green: #10b981;
+    --red: #ef4444;
 }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Inter,Arial,sans-serif;
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
+body {
+    min-height: 100vh;
+    background: radial-gradient(circle at 0% 0%, #2e1065 0%, #05070a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text);
 }
 
-body{
-    min-height:100vh;
-    background:
-        radial-gradient(circle at top,#17202c 0%,#0b0f14 45%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-    color:var(--text);
+.card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 32px;
+    padding: 35px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
 
-.card{
-    width:100%;
-    max-width:380px;
-    background:rgba(18,24,33,.96);
-    border:1px solid var(--card-border);
-    border-radius:24px;
-    padding:26px;
-    box-shadow:var(--shadow);
-    backdrop-filter:blur(8px);
+.header { text-align: center; margin-bottom: 28px; }
+h1 { font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-bottom: 4px; background: linear-gradient(to right, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.setup-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    padding: 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
 }
 
-.header{
-    text-align:center;
-    margin-bottom:22px;
+.label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: block;
 }
 
-.logo{
-    width:58px;
-    height:58px;
-    margin:auto auto 14px;
-    border-radius:18px;
-    display:grid;
-    place-items:center;
-    font-size:24px;
-    background:linear-gradient(135deg,#22c55e,#3b82f6);
-    box-shadow:0 6px 18px rgba(59,130,246,.25);
+.id-display-wrapper { display: flex; gap: 8px; align-items: center; }
+.id-box { flex: 1; color: var(--accent); font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; }
+
+.copy-btn {
+    background: rgba(168, 85, 247, 0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.copy-btn:hover { background: var(--accent); color: white; }
+
+/* Call Stage */
+#call-stage { display: none; text-align: center; margin-bottom: 20px; }
+.avatar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+.avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 24px;
+    border: 3px solid var(--accent);
+    background: #1e1b4b;
+    padding: 5px;
 }
 
-h1{
-    font-size:30px;
-    font-weight:800;
-    letter-spacing:-1px;
-    background:linear-gradient(90deg,#4ade80,#60a5fa);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+.viz-container {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 25px;
+}
+.bar {
+    width: 4px;
+    height: 15%;
+    background: var(--accent);
+    border-radius: 10px;
+    transition: height 0.05s ease;
 }
 
-.sub{
-    margin-top:7px;
-    font-size:13px;
-    color:var(--muted);
+input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--glass-border);
+    padding: 16px;
+    border-radius: 16px;
+    color: white;
+    outline: none;
+    margin-bottom: 15px;
 }
+input:focus { border-color: var(--accent); }
 
-.label{
-    font-size:12px;
-    color:var(--muted);
-    margin-bottom:8px;
+button.primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
 }
+button.primary:active { transform: scale(0.98); }
 
-.id-box{
-    width:100%;
-    background:var(--input);
-    border:1px solid var(--card-border);
-    border-radius:14px;
-    padding:14px;
-    margin-bottom:16px;
-    text-align:center;
-    color:#7dd3fc;
-    font-size:13px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
+.init-btn { background: var(--accent); color: white; margin-top: 10px; }
+.call-btn { background: var(--green); color: white; }
+.end-btn { background: var(--red); color: white; }
+
+.stats-panel {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 11px;
 }
-
-input{
-    width:100%;
-    border:none;
-    outline:none;
-    background:var(--input);
-    border:1px solid var(--card-border);
-    color:white;
-    padding:15px;
-    border-radius:14px;
-    font-size:14px;
-    transition:.18s;
-}
-
-input:focus{
-    border-color:#3b82f6;
-    box-shadow:0 0 0 3px rgba(59,130,246,.15);
-}
-
-.buttons{
-    display:flex;
-    gap:10px;
-    margin-top:14px;
-}
-
-button{
-    border:none;
-    border-radius:14px;
-    padding:14px;
-    color:white;
-    font-weight:700;
-    cursor:pointer;
-    transition:.18s;
-}
-
-.call-btn{
-    flex:1;
-    background:var(--green);
-}
-
-.call-btn:hover{
-    background:var(--green-hover);
-}
-
-.end-btn{
-    flex:1;
-    display:none;
-    background:var(--red);
-}
-
-.end-btn:hover{
-    background:var(--red-hover);
-}
-
-.status{
-    margin-top:18px;
-    padding:12px;
-    border-radius:12px;
-    text-align:center;
-    font-size:13px;
-    background:#0f141c;
-    border:1px solid var(--card-border);
-    color:var(--muted);
-}
-
-.success{
-    color:#4ade80;
-}
-
-.error{
-    color:#f87171;
-}
-
-.warn{
-    color:#fbbf24;
-}
-
-.info{
-    margin-top:16px;
-    padding-top:16px;
-    border-top:1px solid var(--card-border);
-    font-size:12px;
-    line-height:1.8;
-    color:var(--muted);
-    text-align:center;
-}
-
-.info b{
-    color:#dbe5f4;
-}
-
-.footer{
-    text-align:center;
-    margin-top:18px;
-    font-size:11px;
-    line-height:1.6;
-    color:#5f6b7c;
-}
-
+.stat-item { color: var(--muted); }
+.stat-item span { color: var(--text); font-weight: bold; }
 </style>
 </head>
-
 <body>
 
 <div class="card">
-
     <div class="header">
+        <h1>VoiceBox</h1>
+        <p style="color: var(--muted); font-size: 13px;" id="quirky-msg">Beaming your voice across the void...</p>
+    </div>
 
-        <div class="logo">📞</div>
+    <!-- Step 1: Login -->
+    <div id="setup-phase">
+        <span class="label">Claim your Handle</span>
+        <input type="text" id="custom-id-input" placeholder="e.g. space-cowboy-99">
+        <button class="primary init-btn" onclick="initializePeer()">Go Online</button>
+    </div>
 
-        <h1>P2P Call</h1>
+    <!-- Step 2: In-Call -->
+    <div id="call-stage">
+        <div class="avatar-container">
+            <!-- Using DiceBear Adventurer for Anime-style Bitmojis -->
+            <img id="my-avatar" src="" class="avatar">
+            <div style="font-size: 20px; color: var(--accent); animation: pulse 1.5s infinite;">⚡</div>
+            <img id="peer-avatar" src="" class="avatar">
+        </div>
+        <div class="viz-container" id="visualizer"></div>
+        <button class="primary end-btn" onclick="endCall()">Cut Transmission</button>
+    </div>
 
-        <div class="sub">
-            Powered by WebRTC & PeerJS
+    <!-- Step 3: Main Menu -->
+    <div id="call-controls" style="display: none;">
+        <div class="setup-box">
+            <span class="label">Your Frequency</span>
+            <div class="id-display-wrapper">
+                <div class="id-box" id="my-id">---</div>
+                <button class="copy-btn" id="copy-btn" onclick="copyID()">Copy</button>
+            </div>
         </div>
 
-    </div>
+        <span class="label">Target Frequency</span>
+        <input type="text" id="peer-id" placeholder="Paste friend's ID">
+        
+        <button class="primary call-btn" onclick="startCall()">Initiate Link</button>
 
-    <div class="label">
-        Your Peer ID
-    </div>
-
-    <div class="id-box" id="my-id">
-        Generating...
-    </div>
-
-    <div class="label">
-        Friend's Peer ID
-    </div>
-
-    <input 
-        type="text" 
-        id="peer-id"
-        placeholder="Paste friend's ID here"
-        autocomplete="off"
-    >
-
-    <div class="buttons">
-
-        <button class="call-btn" onclick="startCall()">
-            Start Call
-        </button>
-
-        <button class="end-btn" id="end-btn" onclick="endCall()">
-            End Call
-        </button>
-
-    </div>
-
-    <div class="status" id="status">
-        Initializing secure connection...
-    </div>
-
-    <div class="info">
-
-        <b>How to connect</b><br><br>
-
-        1. Share your Peer ID with your friend<br>
-        2. Ask your friend for their Peer ID<br>
-        3. Paste their ID into the input box<br>
-        4. Press <b>Start Call</b>
-
-    </div>
-
-    <div class="footer">
-        Secure browser-based voice calling using peer-to-peer connection
+        <div class="stats-panel">
+            <div class="stat-item">Ping: <span id="stat-latency">--</span></div>
+            <div class="stat-item">Loss: <span id="stat-loss">0</span></div>
+        </div>
     </div>
 
     <audio id="remote-audio" autoplay></audio>
-
 </div>
 
 <script>
-
-const peer = new Peer();
-
-const myID      = document.getElementById("my-id");
-const peerInput = document.getElementById("peer-id");
-const statusBox = document.getElementById("status");
-const endBtn    = document.getElementById("end-btn");
-const audio     = document.getElementById("remote-audio");
-
-let currentCall = null;
+let peer = null;
 let localStream = null;
+let currentCall = null;
+let statsInterval = null;
+let audioCtx = null;
+let animationId = null;
 
-function setStatus(text,type=""){
+const messages = [
+    "Eavesdropping on the universe...",
+    "Encrypting your secrets...",
+    "Sending waves through the ether...",
+    "Is this thing on? 🎤",
+    "Connecting the dots (and voices)..."
+];
 
-    statusBox.className = "status " + type;
-    statusBox.innerText = text;
+// Set random quirky message on load
+document.getElementById('quirky-msg').innerText = messages[Math.floor(Math.random() * messages.length)];
 
+const visualizer = document.getElementById('visualizer');
+for(let i=0; i<15; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    visualizer.appendChild(bar);
 }
 
-function toggleEndButton(show){
+function initializePeer() {
+    const customId = document.getElementById('custom-id-input').value.trim();
+    peer = customId ? new Peer(customId) : new Peer();
 
-    endBtn.style.display = show ? "block" : "none";
+    peer.on('open', (id) => {
+        document.getElementById("my-id").innerText = id;
+        document.getElementById('setup-phase').style.display = 'none';
+        document.getElementById('call-controls').style.display = 'block';
+        
+        // Generate avatars based on IDs
+        document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${id}`;
+    });
 
+    peer.on('error', (err) => {
+        if(err.type === 'unavailable-id') alert("That handle is already taken, Pilot.");
+        else alert("Connection lost in space.");
+    });
+
+    peer.on("call", async (call) => {
+        if(confirm("Incoming link request. Establish connection?")) {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true } });
+            call.answer(localStream);
+            handleCall(call);
+        }
+    });
 }
 
-peer.on("open",(id)=>{
+async function startCall() {
+    const remoteId = document.getElementById("peer-id").value.trim();
+    if(!remoteId) return;
 
-    myID.innerText = id;
-
-    setStatus("Connected to signaling server","success");
-
-});
-
-peer.on("error",(err)=>{
-
-    const errors = {
-
-        "peer-unavailable":"Peer not found or offline",
-        "network":"Network connection issue",
-        "browser-incompatible":"Browser unsupported",
-        "disconnected":"Disconnected from server"
-
-    };
-
-    setStatus(
-        errors[err.type] || "Unexpected connection error",
-        "error"
-    );
-
-});
-
-peer.on("call", async(call)=>{
-
-    try{
-
-        localStream = await navigator.mediaDevices.getUserMedia({
-            audio:true
-        });
-
-        currentCall = call;
-
-        call.answer(localStream);
-
-        toggleEndButton(true);
-
-        setStatus("Incoming call connected","success");
-
-        call.on("stream",(remoteStream)=>{
-
-            audio.srcObject = remoteStream;
-
-        });
-
-        call.on("close",cleanupCall);
-
-    }
-
-    catch{
-
-        setStatus("Microphone permission denied","error");
-
-    }
-
-});
-
-async function startCall(){
-
-    const id = peerInput.value.trim();
-
-    if(!id){
-
-        return setStatus(
-            "Please enter a valid Peer ID",
-            "warn"
-        );
-
-    }
-
-    if(id === myID.innerText){
-
-        return setStatus(
-            "You cannot call yourself",
-            "warn"
-        );
-
-    }
-
-    try{
-
-        setStatus("Requesting microphone access...","warn");
-
-        localStream = await navigator.mediaDevices.getUserMedia({
-            audio:true
-        });
-
-        setStatus("Connecting to peer...","warn");
-
-        currentCall = peer.call(id,localStream);
-
-        currentCall.on("stream",(remoteStream)=>{
-
-            audio.srcObject = remoteStream;
-
-            toggleEndButton(true);
-
-            setStatus("Call connected successfully","success");
-
-        });
-
-        currentCall.on("close",cleanupCall);
-
-        currentCall.on("error",()=>{
-
-            setStatus("Connection failed","error");
-
-        });
-
-    }
-
-    catch{
-
-        setStatus("Please allow microphone access","error");
-
-    }
-
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true } });
+        currentCall = peer.call(remoteId, localStream);
+        document.getElementById('peer-avatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${remoteId}`;
+        handleCall(currentCall);
+    } catch (err) { alert("Mic required for transmission."); }
 }
 
-function endCall(){
+function handleCall(call) {
+    currentCall = call;
+    document.getElementById('call-controls').style.display = 'none';
+    document.getElementById('call-stage').style.display = 'block';
+    
+    // Set peer avatar if not already set (for incoming calls)
+    document.getElementById('peer-avatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${call.peer}`;
 
-    if(currentCall){
+    setupVisualizer(localStream);
 
-        currentCall.close();
-
-    }
-
-    cleanupCall();
-
+    call.on("stream", stream => {
+        document.getElementById("remote-audio").srcObject = stream;
+        startStatsMonitor(call.peerConnection);
+    });
+    call.on("close", cleanup);
 }
 
-function cleanupCall(){
+function setupVisualizer(stream) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 32;
+    source.connect(analyser);
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    const bars = document.querySelectorAll('.bar');
 
-    if(localStream){
-
-        localStream.getTracks().forEach(track=>{
-
-            track.stop();
-
+    function draw() {
+        animationId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+        bars.forEach((bar, i) => {
+            const val = dataArray[i] || 0;
+            bar.style.height = Math.max(15, (val / 255) * 100) + '%';
         });
-
     }
+    draw();
+}
 
-    currentCall = null;
+function startStatsMonitor(pc) {
+    statsInterval = setInterval(async () => {
+        if (!pc) return;
+        const stats = await pc.getStats();
+        stats.forEach(report => {
+            if (report.type === 'remote-inbound-rtp') {
+                document.getElementById("stat-latency").innerText = Math.round(report.roundTripTime * 1000) + "ms";
+                document.getElementById("stat-loss").innerText = report.packetsLost || 0;
+            }
+        });
+    }, 2000);
+}
+
+function endCall() {
+    if(currentCall) currentCall.close();
+    cleanup();
+}
+
+function cleanup() {
+    if(localStream) localStream.getTracks().forEach(t => t.stop());
+    if(animationId) cancelAnimationFrame(animationId);
+    if(audioCtx) audioCtx.close();
+    document.querySelectorAll('.bar').forEach(b => b.style.height = '15%');
+    if(statsInterval) clearInterval(statsInterval);
+    
     localStream = null;
-
-    audio.srcObject = null;
-
-    toggleEndButton(false);
-
-    setStatus("Call ended","warn");
-
+    document.getElementById('call-stage').style.display = 'none';
+    document.getElementById('call-controls').style.display = 'block';
 }
 
+function copyID() {
+    navigator.clipboard.writeText(document.getElementById("my-id").innerText);
+    const btn = document.getElementById('copy-btn');
+    btn.innerText = "Locked!";
+    setTimeout(() => btn.innerText = "Copy", 2000);
+}
 </script>
-
 </body>
 </html>
