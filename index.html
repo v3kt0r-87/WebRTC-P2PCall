@@ -3,313 +3,338 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pro P2P Audio</title>
+<title>AUDIO-LINK // OPTIMIZED</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
 <style>
 :root {
-    --bg: #05070a;
-    --glass: rgba(20, 26, 35, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --accent: #a855f7; /* Purple for a more anime vibe */
-    --text: #f0f2f5;
-    --muted: #94a3b8;
-    --green: #10b981;
-    --red: #ef4444;
+    --neon-green: #00ff41;
+    --neon-cyan: #00f3ff;
+    --bg-black: #010103;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+/* Base Terminal Style */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
 
 body {
     min-height: 100vh;
-    background: radial-gradient(circle at 0% 0%, #2e1065 0%, #05070a 100%);
+    background-color: var(--bg-black);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    color: var(--text);
+    color: var(--neon-green);
+    overflow: hidden;
 }
 
-.card {
+/* Low-CPU Background */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    max-width: 420px;
-    background: var(--glass);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    border-radius: 32px;
-    padding: 35px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    height: 100%;
+    z-index: -1;
+    opacity: 0.6;
 }
 
-.header { text-align: center; margin-bottom: 28px; }
-h1 { font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-bottom: 4px; background: linear-gradient(to right, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-.setup-box {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--glass-border);
-    padding: 16px;
-    border-radius: 20px;
-    margin-bottom: 20px;
+/* CSS Grid Overlay (Zero CPU Cost) */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: -1;
+    pointer-events: none;
 }
 
-.label {
-    font-size: 11px;
+.terminal {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(0, 5, 2, 0.95);
+    border: 1px solid var(--neon-green);
+    padding: 25px;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+}
+
+.header h1 {
+    font-size: 24px;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--muted);
-    margin-bottom: 10px;
-    display: block;
+    letter-spacing: 5px;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 15px;
 }
 
-.id-display-wrapper { display: flex; gap: 8px; align-items: center; }
-.id-box { flex: 1; color: var(--accent); font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; }
+.label { font-size: 10px; margin-bottom: 5px; display: block; color: var(--neon-cyan); opacity: 0.8; }
+
+input {
+    width: 100%;
+    background: rgba(0, 255, 65, 0.05);
+    border: 1px solid var(--neon-green);
+    padding: 12px;
+    color: var(--neon-green);
+    outline: none;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: 0.2s ease;
+}
+
+button:hover { background: var(--neon-green); color: var(--bg-black); }
+
+/* Layout Adjustments */
+.id-display-box {
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    padding-bottom: 15px;
+}
 
 .copy-btn {
-    background: rgba(168, 85, 247, 0.1);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: 0.2s;
+    font-size: 10px;
+    padding: 6px;
+    margin-top: 5px;
+    border-style: dashed;
+    opacity: 0.8;
 }
-.copy-btn:hover { background: var(--accent); color: white; }
 
 /* Call Stage */
-#call-stage { display: none; text-align: center; margin-bottom: 20px; }
-.avatar-container {
+#call-stage { display: none; }
+
+.avatar-grid {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 25px;
+    margin: 20px 0;
 }
+
+.avatar-wrap {
+    text-align: center;
+    border: 1px solid var(--neon-green);
+    padding: 5px;
+    background: #000;
+}
+
 .avatar {
     width: 90px;
     height: 90px;
-    border-radius: 24px;
-    border: 3px solid var(--accent);
-    background: #1e1b4b;
-    padding: 5px;
+    display: block;
 }
 
-.viz-container {
+.user-label {
+    font-size: 10px;
+    background: var(--neon-green);
+    color: #000;
+    display: block;
+    padding: 2px 0;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.viz-box {
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    margin-bottom: 25px;
-}
-.bar {
-    width: 4px;
-    height: 15%;
-    background: var(--accent);
-    border-radius: 10px;
-    transition: height 0.05s ease;
+    gap: 3px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(0, 255, 65, 0.2);
 }
 
-input {
-    width: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--glass-border);
-    padding: 16px;
-    border-radius: 16px;
-    color: white;
-    outline: none;
+.bar { width: 4px; height: 10%; background: var(--neon-green); }
+
+.stats-container {
+    display: flex;
+    gap: 10px;
     margin-bottom: 15px;
 }
-input:focus { border-color: var(--accent); }
 
-button.primary {
-    width: 100%;
-    padding: 16px;
-    border-radius: 16px;
-    border: none;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
+.stat-item {
+    flex: 1;
+    border: 1px solid var(--neon-cyan);
+    padding: 5px;
+    text-align: center;
+    font-size: 10px;
 }
-button.primary:active { transform: scale(0.98); }
 
-.init-btn { background: var(--accent); color: white; margin-top: 10px; }
-.call-btn { background: var(--green); color: white; }
-.end-btn { background: var(--red); color: white; }
+.end-btn { border-color: #ff0055; color: #ff0055; }
+.end-btn:hover { background: #ff0055; color: #fff; }
 
-.stats-panel {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-    font-size: 11px;
-}
-.stat-item { color: var(--muted); }
-.stat-item span { color: var(--text); font-weight: bold; }
 </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="header">
-        <h1>VoiceBox</h1>
-        <p style="color: var(--muted); font-size: 13px;" id="quirky-msg">Beaming your voice across the void...</p>
-    </div>
+<canvas id="bg-canvas"></canvas>
 
-    <!-- Step 1: Login -->
+<div class="terminal">
+    <div class="header"><h1>AUDIO LINK</h1></div>
+
+    <!-- Initialization -->
     <div id="setup-phase">
-        <span class="label">Claim your Handle</span>
-        <input type="text" id="custom-id-input" placeholder="e.g. space-cowboy-99">
-        <button class="primary init-btn" onclick="initializePeer()">Go Online</button>
+        <span class="label">IDENTITY_REGISTRATION:</span>
+        <input type="text" id="username-input" placeholder="USER_ID">
+        <button onclick="initializePeer()">SYNC_UPLINK</button>
     </div>
 
-    <!-- Step 2: In-Call -->
-    <div id="call-stage">
-        <div class="avatar-container">
-            <!-- Using DiceBear Adventurer for Anime-style Bitmojis -->
-            <img id="my-avatar" src="" class="avatar">
-            <div style="font-size: 20px; color: var(--accent); animation: pulse 1.5s infinite;">⚡</div>
-            <img id="peer-avatar" src="" class="avatar">
-        </div>
-        <div class="viz-container" id="visualizer"></div>
-        <button class="primary end-btn" onclick="endCall()">Cut Transmission</button>
-    </div>
-
-    <!-- Step 3: Main Menu -->
+    <!-- Lobby / Main Menu -->
     <div id="call-controls" style="display: none;">
-        <div class="setup-box">
-            <span class="label">Your Frequency</span>
-            <div class="id-display-wrapper">
-                <div class="id-box" id="my-id">---</div>
-                <button class="copy-btn" id="copy-btn" onclick="copyID()">Copy</button>
+        <div class="id-display-box">
+            <span class="label">YOUR_CURRENT_ID:</span>
+            <div id="my-id" style="font-size: 18px; font-weight: bold; margin: 5px 0;">---</div>
+            <button class="copy-btn" onclick="copyID()">> COPY_ID_TO_BUFFER</button>
+        </div>
+
+        <span class="label">REMOTE_CONNECTION_ID:</span>
+        <input type="text" id="peer-id" placeholder="TARGET_ID">
+        <button onclick="startCall()">INITIATE_HANDSHAKE</button>
+    </div>
+
+    <!-- Call Active Interface -->
+    <div id="call-stage">
+        <div class="stats-container">
+            <div class="stat-item">RTT: <span id="stat-latency">--</span></div>
+            <div class="stat-item">LOSS: <span id="stat-loss">0</span></div>
+        </div>
+
+        <div class="avatar-grid">
+            <div class="avatar-wrap">
+                <span class="user-label" id="local-user-tag">LOCAL</span>
+                <img id="my-avatar" class="avatar">
+            </div>
+            <div style="color: var(--neon-cyan); animation: pulse 1s infinite;">>></div>
+            <div class="avatar-wrap">
+                <span class="user-label" id="remote-user-tag">REMOTE</span>
+                <img id="peer-avatar" class="avatar">
             </div>
         </div>
 
-        <span class="label">Target Frequency</span>
-        <input type="text" id="peer-id" placeholder="Paste friend's ID">
-        
-        <button class="primary call-btn" onclick="startCall()">Initiate Link</button>
-
-        <div class="stats-panel">
-            <div class="stat-item">Ping: <span id="stat-latency">--</span></div>
-            <div class="stat-item">Loss: <span id="stat-loss">0</span></div>
-        </div>
+        <div class="viz-box" id="visualizer"></div>
+        <button class="end-btn" onclick="endCall()">TERMINATE_LINK</button>
     </div>
-
-    <audio id="remote-audio" autoplay></audio>
 </div>
 
+<audio id="remote-audio" autoplay></audio>
+
 <script>
-let peer = null;
-let localStream = null;
-let currentCall = null;
-let statsInterval = null;
-let audioCtx = null;
-let animationId = null;
+let peer = null, localStream = null, currentCall = null;
+let audioCtx = null, animationId = null, statsInterval = null;
 
-const messages = [
-    "Eavesdropping on the universe...",
-    "Encrypting your secrets...",
-    "Sending waves through the ether...",
-    "Is this thing on? 🎤",
-    "Connecting the dots (and voices)..."
-];
+// OPTIMIZED MATRIX: Lowered density and framerate
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+const cols = Math.floor(w / 25);
+const drops = Array(cols).fill(1);
 
-// Set random quirky message on load
-document.getElementById('quirky-msg').innerText = messages[Math.floor(Math.random() * messages.length)];
+function matrix() {
+    ctx.fillStyle = 'rgba(1, 1, 3, 0.1)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '15px monospace';
+    for (let i = 0; i < drops.length; i++) {
+        const text = Math.floor(Math.random() * 2); // Only binary 0/1 for lower processing
+        ctx.fillText(text, i * 25, drops[i] * 15);
+        if (drops[i] * 15 > h && Math.random() > 0.98) drops[i] = 0;
+        drops[i]++;
+    }
+}
+setInterval(matrix, 50); // Lowered to 20fps for CPU efficiency
 
-const visualizer = document.getElementById('visualizer');
-for(let i=0; i<15; i++) {
+// Visualizer setup
+const vizContainer = document.getElementById('visualizer');
+for(let i=0; i<16; i++) {
     const bar = document.createElement('div');
     bar.className = 'bar';
-    visualizer.appendChild(bar);
+    vizContainer.appendChild(bar);
 }
 
 function initializePeer() {
-    const customId = document.getElementById('custom-id-input').value.trim();
-    peer = customId ? new Peer(customId) : new Peer();
+    const user = document.getElementById('username-input').value.trim();
+    peer = new Peer(user || undefined);
 
     peer.on('open', (id) => {
-        document.getElementById("my-id").innerText = id;
+        document.getElementById('my-id').innerText = id;
+        document.getElementById('local-user-tag').innerText = id.substring(0,8);
         document.getElementById('setup-phase').style.display = 'none';
         document.getElementById('call-controls').style.display = 'block';
-        
-        // Generate avatars based on IDs
-        document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${id}`;
+        // Tech-style Identicon Avatars
+        document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${id}&backgroundColor=000000`;
     });
 
-    peer.on('error', (err) => {
-        if(err.type === 'unavailable-id') alert("That handle is already taken, Pilot.");
-        else alert("Connection lost in space.");
-    });
-
-    peer.on("call", async (call) => {
-        if(confirm("Incoming link request. Establish connection?")) {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true } });
+    peer.on('call', async (call) => {
+        if(confirm(`ACCEPT UPLINK FROM ${call.peer}?`)) {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false } });
             call.answer(localStream);
             handleCall(call);
         }
     });
+
+    peer.on('error', (err) => alert("CONNECTION_FAULT: " + err.type));
 }
 
 async function startCall() {
-    const remoteId = document.getElementById("peer-id").value.trim();
-    if(!remoteId) return;
-
-    try {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true } });
-        currentCall = peer.call(remoteId, localStream);
-        document.getElementById('peer-avatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${remoteId}`;
-        handleCall(currentCall);
-    } catch (err) { alert("Mic required for transmission."); }
+    const target = document.getElementById('peer-id').value.trim();
+    if(!target) return;
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false } });
+    currentCall = peer.call(target, localStream);
+    handleCall(currentCall);
 }
 
 function handleCall(call) {
     currentCall = call;
     document.getElementById('call-controls').style.display = 'none';
     document.getElementById('call-stage').style.display = 'block';
-    
-    // Set peer avatar if not already set (for incoming calls)
-    document.getElementById('peer-avatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${call.peer}`;
+    document.getElementById('remote-user-tag').innerText = call.peer.substring(0,8);
+    document.getElementById('peer-avatar').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${call.peer}&backgroundColor=000000`;
 
     setupVisualizer(localStream);
-
-    call.on("stream", stream => {
-        document.getElementById("remote-audio").srcObject = stream;
-        startStatsMonitor(call.peerConnection);
+    call.on('stream', s => {
+        document.getElementById('remote-audio').srcObject = s;
+        startStats(call.peerConnection);
     });
-    call.on("close", cleanup);
+    call.on('close', cleanup);
 }
 
 function setupVisualizer(stream) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 32;
+    analyser.fftSize = 32; // Tiny FFT for efficiency
     source.connect(analyser);
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    const data = new Uint8Array(analyser.frequencyBinCount);
     const bars = document.querySelectorAll('.bar');
 
     function draw() {
         animationId = requestAnimationFrame(draw);
-        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteFrequencyData(data);
         bars.forEach((bar, i) => {
-            const val = dataArray[i] || 0;
-            bar.style.height = Math.max(15, (val / 255) * 100) + '%';
+            bar.style.height = Math.max(10, (data[i] / 255) * 100) + '%';
         });
     }
     draw();
 }
 
-function startStatsMonitor(pc) {
+function startStats(pc) {
     statsInterval = setInterval(async () => {
-        if (!pc) return;
         const stats = await pc.getStats();
-        stats.forEach(report => {
-            if (report.type === 'remote-inbound-rtp') {
-                document.getElementById("stat-latency").innerText = Math.round(report.roundTripTime * 1000) + "ms";
-                document.getElementById("stat-loss").innerText = report.packetsLost || 0;
+        stats.forEach(r => {
+            if (r.type === 'remote-inbound-rtp') {
+                document.getElementById('stat-latency').innerText = Math.round(r.roundTripTime * 1000) + 'ms';
+                document.getElementById('stat-loss').innerText = r.packetsLost || 0;
             }
         });
     }, 2000);
@@ -324,20 +349,24 @@ function cleanup() {
     if(localStream) localStream.getTracks().forEach(t => t.stop());
     if(animationId) cancelAnimationFrame(animationId);
     if(audioCtx) audioCtx.close();
-    document.querySelectorAll('.bar').forEach(b => b.style.height = '15%');
     if(statsInterval) clearInterval(statsInterval);
-    
-    localStream = null;
     document.getElementById('call-stage').style.display = 'none';
     document.getElementById('call-controls').style.display = 'block';
 }
 
 function copyID() {
-    navigator.clipboard.writeText(document.getElementById("my-id").innerText);
-    const btn = document.getElementById('copy-btn');
-    btn.innerText = "Locked!";
-    setTimeout(() => btn.innerText = "Copy", 2000);
+    navigator.clipboard.writeText(document.getElementById('my-id').innerText);
 }
+
+window.addEventListener('resize', () => {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+});
 </script>
+
+<style>
+@keyframes pulse { 50% { opacity: 0.2; } }
+</style>
+
 </body>
 </html>
