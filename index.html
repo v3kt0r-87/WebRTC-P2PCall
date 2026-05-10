@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>P2P Call</title>
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<style>
+
+:root{
+    --bg:#0b0f14;
+    --card:#121821;
+    --card-border:#1e2632;
+    --input:#0f141c;
+    --text:#eef2f7;
+    --muted:#8b98ab;
+
+    --green:#22c55e;
+    --green-hover:#16a34a;
+
+    --red:#ef4444;
+    --red-hover:#dc2626;
+
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Inter,Arial,sans-serif;
+}
+
+body{
+    min-height:100vh;
+    background:
+        radial-gradient(circle at top,#17202c 0%,#0b0f14 45%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    color:var(--text);
+}
+
+.card{
+    width:100%;
+    max-width:380px;
+    background:rgba(18,24,33,.96);
+    border:1px solid var(--card-border);
+    border-radius:24px;
+    padding:26px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(8px);
+}
+
+.header{
+    text-align:center;
+    margin-bottom:22px;
+}
+
+.logo{
+    width:58px;
+    height:58px;
+    margin:auto auto 14px;
+    border-radius:18px;
+    display:grid;
+    place-items:center;
+    font-size:24px;
+    background:linear-gradient(135deg,#22c55e,#3b82f6);
+    box-shadow:0 6px 18px rgba(59,130,246,.25);
+}
+
+h1{
+    font-size:30px;
+    font-weight:800;
+    letter-spacing:-1px;
+    background:linear-gradient(90deg,#4ade80,#60a5fa);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.sub{
+    margin-top:7px;
+    font-size:13px;
+    color:var(--muted);
+}
+
+.label{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+}
+
+.id-box{
+    width:100%;
+    background:var(--input);
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:16px;
+    text-align:center;
+    color:#7dd3fc;
+    font-size:13px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+input{
+    width:100%;
+    border:none;
+    outline:none;
+    background:var(--input);
+    border:1px solid var(--card-border);
+    color:white;
+    padding:15px;
+    border-radius:14px;
+    font-size:14px;
+    transition:.18s;
+}
+
+input:focus{
+    border-color:#3b82f6;
+    box-shadow:0 0 0 3px rgba(59,130,246,.15);
+}
+
+.buttons{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+}
+
+button{
+    border:none;
+    border-radius:14px;
+    padding:14px;
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+    transition:.18s;
+}
+
+.call-btn{
+    flex:1;
+    background:var(--green);
+}
+
+.call-btn:hover{
+    background:var(--green-hover);
+}
+
+.end-btn{
+    flex:1;
+    display:none;
+    background:var(--red);
+}
+
+.end-btn:hover{
+    background:var(--red-hover);
+}
+
+.status{
+    margin-top:18px;
+    padding:12px;
+    border-radius:12px;
+    text-align:center;
+    font-size:13px;
+    background:#0f141c;
+    border:1px solid var(--card-border);
+    color:var(--muted);
+}
+
+.success{
+    color:#4ade80;
+}
+
+.error{
+    color:#f87171;
+}
+
+.warn{
+    color:#fbbf24;
+}
+
+.info{
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px solid var(--card-border);
+    font-size:12px;
+    line-height:1.8;
+    color:var(--muted);
+    text-align:center;
+}
+
+.info b{
+    color:#dbe5f4;
+}
+
+.footer{
+    text-align:center;
+    margin-top:18px;
+    font-size:11px;
+    line-height:1.6;
+    color:#5f6b7c;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <div class="header">
+
+        <div class="logo">📞</div>
+
+        <h1>P2P Call</h1>
+
+        <div class="sub">
+            Powered by WebRTC & PeerJS
+        </div>
+
+    </div>
+
+    <div class="label">
+        Your Peer ID
+    </div>
+
+    <div class="id-box" id="my-id">
+        Generating...
+    </div>
+
+    <div class="label">
+        Friend's Peer ID
+    </div>
+
+    <input 
+        type="text" 
+        id="peer-id"
+        placeholder="Paste friend's ID here"
+        autocomplete="off"
+    >
+
+    <div class="buttons">
+
+        <button class="call-btn" onclick="startCall()">
+            Start Call
+        </button>
+
+        <button class="end-btn" id="end-btn" onclick="endCall()">
+            End Call
+        </button>
+
+    </div>
+
+    <div class="status" id="status">
+        Initializing secure connection...
+    </div>
+
+    <div class="info">
+
+        <b>How to connect</b><br><br>
+
+        1. Share your Peer ID with your friend<br>
+        2. Ask your friend for their Peer ID<br>
+        3. Paste their ID into the input box<br>
+        4. Press <b>Start Call</b>
+
+    </div>
+
+    <div class="footer">
+        Secure browser-based voice calling using peer-to-peer connection
+    </div>
+
+    <audio id="remote-audio" autoplay></audio>
+
+</div>
+
+<script>
+
+const peer = new Peer();
+
+const myID      = document.getElementById("my-id");
+const peerInput = document.getElementById("peer-id");
+const statusBox = document.getElementById("status");
+const endBtn    = document.getElementById("end-btn");
+const audio     = document.getElementById("remote-audio");
+
+let currentCall = null;
+let localStream = null;
+
+function setStatus(text,type=""){
+
+    statusBox.className = "status " + type;
+    statusBox.innerText = text;
+
+}
+
+function toggleEndButton(show){
+
+    endBtn.style.display = show ? "block" : "none";
+
+}
+
+peer.on("open",(id)=>{
+
+    myID.innerText = id;
+
+    setStatus("Connected to signaling server","success");
+
+});
+
+peer.on("error",(err)=>{
+
+    const errors = {
+
+        "peer-unavailable":"Peer not found or offline",
+        "network":"Network connection issue",
+        "browser-incompatible":"Browser unsupported",
+        "disconnected":"Disconnected from server"
+
+    };
+
+    setStatus(
+        errors[err.type] || "Unexpected connection error",
+        "error"
+    );
+
+});
+
+peer.on("call", async(call)=>{
+
+    try{
+
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio:true
+        });
+
+        currentCall = call;
+
+        call.answer(localStream);
+
+        toggleEndButton(true);
+
+        setStatus("Incoming call connected","success");
+
+        call.on("stream",(remoteStream)=>{
+
+            audio.srcObject = remoteStream;
+
+        });
+
+        call.on("close",cleanupCall);
+
+    }
+
+    catch{
+
+        setStatus("Microphone permission denied","error");
+
+    }
+
+});
+
+async function startCall(){
+
+    const id = peerInput.value.trim();
+
+    if(!id){
+
+        return setStatus(
+            "Please enter a valid Peer ID",
+            "warn"
+        );
+
+    }
+
+    if(id === myID.innerText){
+
+        return setStatus(
+            "You cannot call yourself",
+            "warn"
+        );
+
+    }
+
+    try{
+
+        setStatus("Requesting microphone access...","warn");
+
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio:true
+        });
+
+        setStatus("Connecting to peer...","warn");
+
+        currentCall = peer.call(id,localStream);
+
+        currentCall.on("stream",(remoteStream)=>{
+
+            audio.srcObject = remoteStream;
+
+            toggleEndButton(true);
+
+            setStatus("Call connected successfully","success");
+
+        });
+
+        currentCall.on("close",cleanupCall);
+
+        currentCall.on("error",()=>{
+
+            setStatus("Connection failed","error");
+
+        });
+
+    }
+
+    catch{
+
+        setStatus("Please allow microphone access","error");
+
+    }
+
+}
+
+function endCall(){
+
+    if(currentCall){
+
+        currentCall.close();
+
+    }
+
+    cleanupCall();
+
+}
+
+function cleanupCall(){
+
+    if(localStream){
+
+        localStream.getTracks().forEach(track=>{
+
+            track.stop();
+
+        });
+
+    }
+
+    currentCall = null;
+    localStream = null;
+
+    audio.srcObject = null;
+
+    toggleEndButton(false);
+
+    setStatus("Call ended","warn");
+
+}
+
+</script>
+
+</body>
+</html>
