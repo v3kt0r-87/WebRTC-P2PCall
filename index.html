@@ -2,454 +2,928 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AUDIO-LINK // OPTIMIZED</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AUDIO LINK</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
 <style>
-:root {
-    --neon-green: #00ff41;
-    --neon-cyan: #00f3ff;
-    --bg-black: #010103;
+
+/* MODERN THEME VARIABLES */
+:root{
+    --bg-base: #020205;
+    --surface: rgba(10, 12, 16, 0.65);
+    --surface-hover: rgba(0, 255, 65, 0.08);
+    --border: rgba(0, 255, 65, 0.3);
+    --border-highlight: rgba(0, 243, 255, 0.6);
+    --primary: #00ff41;
+    --primary-glow: rgba(0, 255, 65, 0.4);
+    --secondary: #00f3ff;
+    --danger: #ff0055;
+    --text-main: #f0fdf4;
+    --text-muted: #86a58d;
 }
 
-/* Base Terminal Style */
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+}
 
-body {
+body{
+    background-color: var(--bg-base);
+    color: var(--text-main);
     min-height: 100vh;
-    background-color: var(--bg-black);
     display: flex;
-    align-items: center;
     justify-content: center;
-    color: var(--neon-green);
+    align-items: center;
     overflow: hidden;
 }
 
-/* Low-CPU Background */
-#bg-canvas {
+#bg-canvas{
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     z-index: -1;
-    opacity: 0.6;
+    mix-blend-mode: screen; 
+    opacity: 0.85;
 }
 
-/* CSS Grid Overlay (Zero CPU Cost) */
-body::after {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
-    background-size: 30px 30px;
-    z-index: -1;
-    pointer-events: none;
-}
-
-.terminal {
+/* Modern Glassmorphism Terminal */
+.terminal{
     width: 100%;
-    max-width: 500px;
-    background: rgba(0, 5, 2, 0.95);
-    border: 1px solid var(--neon-green);
-    padding: 30px;
+    max-width: 720px;
+    background: var(--surface);
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 
+        0 25px 50px -12px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(255,255,255,0.05) inset,
+        0 0 30px var(--primary-glow);
     position: relative;
-    box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+    z-index: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
 }
 
-.header h1 {
-    font-size: 28px;
-    text-transform: uppercase;
-    letter-spacing: 5px;
-    text-align: center;
-    color: #fff;
-    margin-bottom: 20px;
-}
-
-.label { 
-    font-size: 14px;
-    margin-bottom: 8px; 
-    display: block; 
-    color: var(--neon-cyan); 
-    opacity: 0.8; 
-    font-weight: bold;
-}
-
-input {
-    width: 100%;
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid var(--neon-green);
-    padding: 14px;
-    color: var(--neon-green);
-    outline: none;
-    margin-bottom: 12px;
-    font-size: 18px;
-}
-
-button {
-    width: 100%;
-    padding: 16px;
-    background: transparent;
-    border: 1px solid var(--neon-green);
-    color: var(--neon-green);
-    font-weight: bold;
-    font-size: 16px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: 0.2s ease;
-}
-
-button:hover { background: var(--neon-green); color: var(--bg-black); }
-
-/* Layout Adjustments */
-.id-display-box {
-    margin-bottom: 25px;
-    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
-    padding-bottom: 15px;
-}
-
-.copy-btn {
-    font-size: 14px;
-    padding: 8px;
-    margin-top: 5px;
-    border-style: dashed;
-    opacity: 0.8;
-}
-
-/* Call Stage */
-#call-stage { display: none; }
-
-.avatar-grid {
+.header{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 25px 0;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.avatar-wrap {
-    text-align: center;
-    border: 1px solid var(--neon-green);
-    padding: 5px;
-    background: #000;
-}
-
-.avatar {
-    width: 110px;
-    height: 110px;
-    display: block;
-}
-
-.user-label {
-    font-size: 14px;
-    background: var(--neon-green);
-    color: #000;
-    display: block;
-    padding: 4px 0;
+.header h1{
+    color: var(--text-main);
+    font-size: 20px;
+    letter-spacing: 6px;
+    font-weight: 600;
     text-transform: uppercase;
+    text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--primary);
+    animation: pulse-dot 2s infinite;
+}
+
+.label{
+    display: block;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+input, button{
+    width: 100%;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+input{
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    padding: 16px;
+    color: var(--primary);
+    margin-bottom: 16px;
+    outline: none;
+    font-size: 16px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+input:focus{
+    border-color: var(--secondary);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 0 15px rgba(0, 243, 255, 0.2);
+}
+
+input::placeholder {
+    color: rgba(0, 255, 65, 0.2);
+}
+
+button{
+    background: rgba(0, 255, 65, 0.05);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 16px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+button:hover{
+    background: var(--primary);
+    color: #000;
+    box-shadow: 0 0 20px var(--primary-glow);
+    transform: translateY(-2px);
+}
+
+.copy-btn{
+    border: 1px dashed var(--text-muted);
+    color: var(--text-muted);
+    background: transparent;
+    padding: 10px;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+.copy-btn:hover{
+    border-style: solid;
+    border-color: var(--secondary);
+    background: var(--secondary);
+}
+
+#call-stage{
+    display: none;
+}
+
+.data-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.data-card{
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.data-value {
+    color: var(--secondary);
     font-weight: bold;
 }
 
-.viz-box {
-    height: 50px;
+.avatar-grid{
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin: 32px 0;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.avatar-wrap{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 140px;
+}
+
+.avatar{
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    padding: 4px;
+    background: #000;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease;
+}
+
+.user-tag{
+    background: rgba(0, 255, 65, 0.1);
+    color: var(--primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    border: 1px solid var(--border);
+}
+
+.ip-display {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.center-module {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 15px; /* Aligns module nicely between avatars */
+}
+
+.call-timer {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--primary);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.connection-line {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
-    margin-bottom: 25px;
-    border: 1px solid rgba(0, 255, 65, 0.2);
+    gap: 8px;
 }
 
-.bar { width: 5px; height: 100%; background: var(--neon-green); transform: scaleY(0.1); }
+.dot {
+    width: 6px;
+    height: 6px;
+    background: var(--secondary);
+    border-radius: 50%;
+    animation: transfer 1s linear infinite;
+}
 
-.stats-container {
+/* OPTIMIZED CANVAS VISUALIZER CONTAINER */
+.viz-box{
+    height: 80px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.4);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 5px 20px rgba(0,0,0,0.5);
+}
+
+#viz-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.controls-row {
     display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+    background: rgba(0,0,0,0.2);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.03);
 }
 
-.stat-item {
+.range{
     flex: 1;
-    border: 1px solid var(--neon-cyan);
-    padding: 8px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: bold;
+    -webkit-appearance: none;
+    background: rgba(255,255,255,0.1);
+    height: 4px;
+    border-radius: 2px;
+    outline: none;
 }
 
-.end-btn { border-color: #ff0055; color: #ff0055; }
-.end-btn:hover { background: #ff0055; color: #fff; }
+.range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--primary);
+}
+
+.end-btn{
+    background: transparent;
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.end-btn:hover{
+    background: var(--danger);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+}
+
+@keyframes pulse-dot{
+    0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--primary); }
+    50% { opacity: 0.3; box-shadow: 0 0 2px var(--primary); }
+}
+
+@keyframes transfer{
+    0% { transform: translateX(-10px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(10px); opacity: 0; }
+}
 
 </style>
 </head>
+
 <body>
 
 <canvas id="bg-canvas"></canvas>
 
 <div class="terminal">
-    <div class="header"><h1>AUDIO LINK</h1></div>
-
-    <!-- Initialization -->
-    <div id="setup-phase">
-        <span class="label">IDENTITY_REGISTRATION:</span>
-        <input type="text" id="username-input" placeholder="USER_ID">
-        
-        <!-- Setup Error message container -->
-        <div id="setup-error" style="color: #00f3ff; font-size: 14px; margin-bottom: 12px; display: none; font-weight: bold;"></div>
-        
-        <button onclick="initializePeer()">SYNC_UPLINK</button>
+    <div class="header">
+        <h1>AUDIO LINK</h1>
+        <div class="status-dot" id="system-status"></div>
     </div>
 
-    <!-- Lobby / Main Menu -->
-    <div id="call-controls" style="display: none;">
-        <div class="id-display-box">
-            <span class="label">YOUR_CURRENT_ID:</span>
-            <div id="my-id" style="font-size: 24px; font-weight: bold; margin: 10px 0; color: #fff;">---</div>
-            <button class="copy-btn" onclick="copyID()">> COPY_ID_TO_BUFFER</button>
+    <!-- SETUP -->
+    <div id="setup-phase">
+        <span class="label">Identity Registration</span>
+        <input type="text" id="username-input" placeholder="Enter System ID" autocomplete="off" spellcheck="false">
+        <div id="setup-error" style="display:none;color:var(--danger);margin-bottom:16px;font-size:14px;"></div>
+        <button onclick="initializePeer()">Initialize Uplink</button>
+    </div>
+
+    <!-- LOBBY -->
+    <div id="call-controls" style="display:none;">
+        <div class="data-card" style="margin-bottom: 24px;">
+            <span class="label">Local Node Address</span>
+            <div id="my-id" style="font-size:24px;color:var(--text-main);font-weight:bold;letter-spacing:2px;">---</div>
+            <button class="copy-btn" onclick="copyID()">Copy to Clipboard</button>
         </div>
 
-        <span class="label">REMOTE_CONNECTION_ID:</span>
-        <input type="text" id="peer-id" placeholder="TARGET_ID">
-        
-        <!-- Call Target Error message container -->
-        <div id="call-error" style="color: #00f3ff; font-size: 14px; margin-bottom: 12px; display: none; font-weight: bold;"></div>
-
-        <button onclick="startCall()">INITIATE_HANDSHAKE</button>
+        <span class="label">Target Node Address</span>
+        <input type="text" id="peer-id" placeholder="Paste Target ID" autocomplete="off" spellcheck="false">
+        <div id="call-error" style="display:none;color:var(--danger);margin-bottom:16px;font-size:14px;"></div>
+        <button onclick="startCall()">Establish Connection</button>
     </div>
 
-    <!-- Call Active Interface -->
+    <!-- CALL ACTIVE -->
     <div id="call-stage">
-        <div class="stats-container">
-            <div class="stat-item">RTT: <span id="stat-latency">--</span></div>
-            <div class="stat-item">LOSS: <span id="stat-loss">0</span></div>
+        
+        <div class="data-grid">
+            <div class="data-card">
+                <span class="label" style="margin-bottom: 4px;">Telemetry</span>
+                <div class="data-row"><span>Ping (Avg)</span> <span class="data-value" id="lat-avg">--</span></div>
+                <div class="data-row"><span>Jitter</span> <span class="data-value" id="jitter">--</span></div>
+                <div class="data-row"><span>Loss</span> <span class="data-value" id="loss">0</span></div>
+                <div class="data-row"><span>Integrity</span> <span class="data-value" id="quality">--</span></div>
+            </div>
+            <div class="data-card">
+                <span class="label" style="margin-bottom: 4px;">Routing Info</span>
+                <div class="data-row"><span>Type</span> <span class="data-value" id="network-type">---</span></div>
+                <div class="data-row"><span>Route</span> <span class="data-value" id="transport" style="font-size:11px;">---</span></div>
+            </div>
         </div>
 
         <div class="avatar-grid">
+            <!-- Left Side: Local -->
             <div class="avatar-wrap">
-                <span class="user-label" id="local-user-tag">LOCAL</span>
                 <img id="my-avatar" class="avatar">
+                <span class="user-tag" id="local-user-tag">LOCAL</span>
+                <span class="ip-display" id="local-ip">---</span>
             </div>
-            <div style="color: var(--neon-cyan); animation: pulse 1s infinite; font-size: 24px;">>></div>
+            
+            <!-- Center Module (Timer & Connection Line) -->
+            <div class="center-module">
+                <div id="call-timer" class="call-timer">00:00</div>
+                <div class="connection-line">
+                    <div class="dot" style="animation-delay: 0s;"></div>
+                    <div class="dot" style="animation-delay: 0.3s;"></div>
+                    <div class="dot" style="animation-delay: 0.6s;"></div>
+                </div>
+            </div>
+
+            <!-- Right Side: Remote -->
             <div class="avatar-wrap">
-                <span class="user-label" id="remote-user-tag">REMOTE</span>
                 <img id="peer-avatar" class="avatar">
+                <span class="user-tag" id="remote-user-tag" style="border-color:var(--secondary); color:var(--secondary); background:rgba(0,243,255,0.1);">TARGET</span>
+                <span class="ip-display" id="remote-ip">---</span>
             </div>
         </div>
 
-        <div class="viz-box" id="visualizer"></div>
-        <button class="end-btn" onclick="endCall()">TERMINATE_LINK</button>
+        <span class="label">MICROPHONE INTENSITY</span>
+        <div class="viz-box">
+            <canvas id="viz-canvas"></canvas>
+        </div>
+
+        <div class="controls-row">
+            <span class="label" style="margin:0; min-width: 110px;">Volume Gain: <span id="gain-value" style="color:var(--primary);">1.0x</span></span>
+            <input type="range" id="gain-slider" class="range" min="50" max="300" value="100">
+            <span class="label" style="margin:0; min-width: 60px; text-align:right;" id="db-level">-- dB</span>
+        </div>
+
+        <button class="end-btn" onclick="endCall()">TERMINATE CONNECTION</button>
     </div>
 </div>
 
 <audio id="remote-audio" autoplay></audio>
 
 <script>
-let peer = null, localStream = null, currentCall = null;
-let audioCtx = null, animationId = null, statsInterval = null;
 
-// OPTIMIZED AUDIO CONSTRAINTS
-const audioConstraints = { 
-    audio: { 
-        echoCancellation: false, // Disabled to save CPU. Wear headphones!
-        noiseSuppression: false, 
-        autoGainControl: false, // Prevents volume ducking delays
+/* GLOBALS */
+let peer = null;
+let localStream = null;
+let currentCall = null;
+let remoteAudioCtx = null; 
+let localAudioCtx = null;
+let gainNode = null;
+let compressor = null;
+let remoteSource = null;
+let statsInterval = null;
+let latencyHistory = [];
+let vizAnimationId = null; 
+let callTimerInterval = null;
+let callStartTime = 0;
+
+const audioConstraints = {
+    audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: false,
         sampleRate: 48000,
-        channelCount: 1
-    } 
+        channelCount: 1,
+        latency: 0.02
+    }
 };
 
-// OPTIMIZED MATRIX: Lowered density and framerate
+/* --- SMOOTH CLASSIC MATRIX BACKGROUND --- */
 const canvas = document.getElementById('bg-canvas');
 const ctx = canvas.getContext('2d');
 let w = canvas.width = window.innerWidth;
 let h = canvas.height = window.innerHeight;
-const cols = Math.floor(w / 25);
-const drops = Array(cols).fill(1);
 
-function matrix() {
-    ctx.fillStyle = 'rgba(1, 1, 3, 0.1)';
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ'.split('');
+const fontSize = 16;
+let cols = Math.floor(w / fontSize);
+let drops = Array(cols).fill(1);
+let lastMatrixTime = 0;
+
+function matrixLoop(time) {
+    requestAnimationFrame(matrixLoop);
+    
+    if (time - lastMatrixTime < 50) return;
+    lastMatrixTime = time;
+
+    ctx.fillStyle = 'rgba(2, 2, 5, 0.12)'; 
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#00ff41';
-    ctx.font = '16px monospace';
-    for (let i = 0; i < drops.length; i++) {
-        const text = Math.floor(Math.random() * 2); 
-        ctx.fillText(text, i * 25, drops[i] * 16);
-        if (drops[i] * 16 > h && Math.random() > 0.98) drops[i] = 0;
+
+    ctx.font = `500 ${fontSize}px monospace`;
+    ctx.fillStyle = '#00ff41'; 
+    ctx.shadowBlur = 0;        
+
+    for(let i=0; i<drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if(drops[i] * fontSize > h && Math.random() > 0.975){
+            drops[i] = 0;
+        }
         drops[i]++;
     }
 }
-setInterval(matrix, 50);
+requestAnimationFrame(matrixLoop);
 
-// Visualizer setup
-const vizContainer = document.getElementById('visualizer');
-for(let i=0; i<16; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    vizContainer.appendChild(bar);
-}
-
-function initializePeer() {
+/* INIT PEER */
+function initializePeer(){
     const user = document.getElementById('username-input').value.trim();
     const errorBox = document.getElementById('setup-error');
 
-    // Validation Check for Initial Setup
-    if (user.length < 4) {
-        errorBox.innerText = "ERR_AUTH: USER_ID MUST BE AT LEAST 4 CHARACTERS";
+    if(user.length < 4){
+        errorBox.innerText = "[ERROR] Node ID must exceed 3 characters.";
         errorBox.style.display = "block";
-        return; 
+        return;
     }
-    
+
     errorBox.style.display = "none";
+    document.getElementById('system-status').style.background = 'orange';
 
-// Initialize PeerJS with multiple STUN servers for ICE candidate discovery
-peer = new Peer(user, {
-    config: {
-        iceServers: [
-            { urls: 'stun:stun.cloudflare.com:3478' },
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun.nextcloud.com:443' },
-            { urls: 'stun:openrelay.metered.ca:443' }
-        ]
-    }
-});
+    peer = new Peer(user, {
+        config: {
+            iceServers: [
+                { urls:'stun:stun.cloudflare.com:3478' },
+                { urls:'stun:stun.l.google.com:19302' },
+                { urls:'stun:stun1.l.google.com:19302' }
+            ]
+        }
+    });
 
-    peer.on('open', (id) => {
+    peer.on('open', (id)=>{
         document.getElementById('my-id').innerText = id;
         document.getElementById('local-user-tag').innerText = id.substring(0,8);
         document.getElementById('setup-phase').style.display = 'none';
         document.getElementById('call-controls').style.display = 'block';
-        document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${id}&backgroundColor=000000`;
+        
+        document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${id}&backgroundColor=000000`;
+        document.getElementById('system-status').style.background = 'var(--primary)';
     });
 
-    peer.on('call', async (call) => {
-        if(confirm(`ACCEPT UPLINK FROM ${call.peer}?`)) {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
-                call.answer(localStream);
-                handleCall(call);
-            } catch(e) {
-                alert("ERR_SYS: MICROPHONE UPLINK FAILED / DENIED");
-            }
+    peer.on('call', async(call)=>{
+        try{
+            localStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
+            call.answer(localStream);
+            handleCall(call);
+        }catch(e){
+            alert("[ERROR] Audio interface access denied.");
         }
     });
 
-    peer.on('error', (err) => alert("CONNECTION_FAULT: " + err.type));
+    peer.on('error', (err)=>{
+        alert("[SYS_ERR] " + err.type);
+        document.getElementById('system-status').style.background = 'var(--danger)';
+    });
 }
 
-async function startCall() {
+/* START CALL */
+async function startCall(){
     const target = document.getElementById('peer-id').value.trim();
     const errorBox = document.getElementById('call-error');
 
-    // Validation Check for Target ID
-    if (target.length < 4) {
-        errorBox.innerText = "ERR_TARGET: TARGET_ID MUST BE AT LEAST 4 CHARACTERS";
-        errorBox.style.display = "block";
-        return;
-    }
-
-    // Prevent connecting to yourself
-    if (target === peer.id) {
-        errorBox.innerText = "ERR_TARGET: CANNOT INITIATE HANDSHAKE WITH LOCAL_ID";
+    if(target.length < 4){
+        errorBox.innerText = "[ERROR] Invalid target coordinates.";
         errorBox.style.display = "block";
         return;
     }
 
     errorBox.style.display = "none";
 
-    try {
+    try{
         localStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
         currentCall = peer.call(target, localStream);
         handleCall(currentCall);
-    } catch (e) {
-        errorBox.innerText = "ERR_SYS: MICROPHONE UPLINK FAILED / DENIED";
+    }catch(e){
+        errorBox.innerText = "[ERROR] Audio interface initialization failed.";
         errorBox.style.display = "block";
     }
 }
 
-function handleCall(call) {
+/* HANDLE CALL */
+function handleCall(call){
     currentCall = call;
     document.getElementById('call-controls').style.display = 'none';
     document.getElementById('call-stage').style.display = 'block';
+    
     document.getElementById('remote-user-tag').innerText = call.peer.substring(0,8);
-    document.getElementById('peer-avatar').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${call.peer}&backgroundColor=000000`;
+    document.getElementById('peer-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${call.peer}&backgroundColor=000000`;
 
     setupVisualizer(localStream);
-    call.on('stream', s => {
-        document.getElementById('remote-audio').srcObject = s;
+
+    call.on('stream', async(stream)=>{
+        const remoteAudio = document.getElementById('remote-audio');
+        remoteAudio.srcObject = stream;
+
+        if (!remoteAudioCtx) {
+            remoteAudioCtx = new(window.AudioContext || window.webkitAudioContext)();
+        } else if (remoteAudioCtx.state === 'suspended') {
+            remoteAudioCtx.resume();
+        }
+
+        if (remoteSource) remoteSource.disconnect();
+        if (gainNode) gainNode.disconnect();
+        if (compressor) compressor.disconnect();
+
+        remoteSource = remoteAudioCtx.createMediaStreamSource(stream);
+        gainNode = remoteAudioCtx.createGain();
+        compressor = remoteAudioCtx.createDynamicsCompressor();
+
+        compressor.threshold.value = -18;
+        compressor.knee.value = 12;
+        compressor.ratio.value = 4;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.25;
+
+        gainNode.gain.value = document.getElementById('gain-slider').value / 100;
+
+        remoteSource.connect(gainNode);
+        gainNode.connect(compressor);
+        compressor.connect(remoteAudioCtx.destination);
+
+        setupGainSlider();
         startStats(call.peerConnection);
+        startCallTimer();
     });
+
     call.on('close', cleanup);
 }
 
-// GPU-Accelerated Visualizer (Capped at 30 FPS)
-function setupVisualizer(stream) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaStreamSource(stream);
-    const analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 32; 
-    source.connect(analyser);
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    const bars = document.querySelectorAll('.bar');
+/* TIMER LOGIC */
+function startCallTimer() {
+    callStartTime = Date.now();
+    const timerDisplay = document.getElementById('call-timer');
+    timerDisplay.innerText = "00:00";
 
-    // Make sure bars scale upwards
-    bars.forEach(bar => bar.style.transformOrigin = "bottom");
+    if (callTimerInterval) clearInterval(callTimerInterval);
 
-    function draw() {
-        // Cap at ~30 FPS to save CPU (1000ms / 30 frames)
-        animationId = setTimeout(draw, 33);
+    callTimerInterval = setInterval(() => {
+        const elapsed = Date.now() - callStartTime;
+        const totalSeconds = Math.floor(elapsed / 1000);
         
-        analyser.getByteFrequencyData(data);
-        bars.forEach((bar, i) => {
-            // Hardware-accelerated CSS transform instead of CPU-heavy height changes
-            const scaleY = Math.max(0.05, data[i] / 255);
-            bar.style.transform = `scaleY(${scaleY})`; 
-        });
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+        const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+
+        if (hours > 0) {
+            timerDisplay.innerText = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds}`;
+        } else {
+            timerDisplay.innerText = `${minutes}:${seconds}`;
+        }
+    }, 1000);
+}
+
+function stopCallTimer() {
+    if (callTimerInterval) clearInterval(callTimerInterval);
+    callTimerInterval = null;
+    document.getElementById('call-timer').innerText = "00:00";
+}
+
+/* GAIN */
+function setupGainSlider(){
+    const slider = document.getElementById('gain-slider');
+    const newSlider = slider.cloneNode(true);
+    slider.parentNode.replaceChild(newSlider, slider);
+
+    newSlider.addEventListener('input', ()=>{
+        const value = newSlider.value;
+        const multiplier = (value / 100).toFixed(1);
+        document.getElementById('gain-value').innerText = multiplier + "x";
+        if(gainNode){
+            gainNode.gain.value = value / 100;
+        }
+    });
+}
+
+/* ENHANCED CANVAS VISUALIZER */
+function setupVisualizer(stream){
+    const vizCanvas = document.getElementById('viz-canvas');
+    const vCtx = vizCanvas.getContext('2d');
+    
+    vizCanvas.width = vizCanvas.offsetWidth;
+    vizCanvas.height = vizCanvas.offsetHeight;
+
+    if (!localAudioCtx) {
+        localAudioCtx = new(window.AudioContext || window.webkitAudioContext)();
+    } else if (localAudioCtx.state === 'suspended') {
+        localAudioCtx.resume();
     }
+
+    const source = localAudioCtx.createMediaStreamSource(stream);
+    const analyser = localAudioCtx.createAnalyser();
+    
+    analyser.fftSize = 128;
+    analyser.smoothingTimeConstant = 0.85;
+    source.connect(analyser);
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+
+    function draw(){
+        vizAnimationId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(data);
+
+        vCtx.clearRect(0, 0, vizCanvas.width, vizCanvas.height);
+        
+        let total = 0;
+        const sliceWidth = vizCanvas.width * 1.0 / (data.length / 2); 
+        let x = 0;
+
+        vCtx.beginPath();
+        vCtx.moveTo(0, vizCanvas.height);
+
+        for(let i = 0; i < data.length / 2; i++){
+            total += data[i];
+            const v = data[i] / 255.0;
+            const y = vizCanvas.height - (v * vizCanvas.height * 0.8);
+
+            if(i === 0) {
+                vCtx.moveTo(x, y);
+            } else {
+                const prevX = x - sliceWidth;
+                const prevV = data[i-1] / 255.0;
+                const prevY = vizCanvas.height - (prevV * vizCanvas.height * 0.8);
+                const cpX = prevX + sliceWidth / 2;
+                vCtx.quadraticCurveTo(cpX, prevY, x, y);
+            }
+            x += sliceWidth;
+        }
+
+        vCtx.lineTo(vizCanvas.width, vizCanvas.height);
+        vCtx.lineTo(0, vizCanvas.height);
+        
+        const gradient = vCtx.createLinearGradient(0, 0, 0, vizCanvas.height);
+        gradient.addColorStop(0, 'rgba(0, 243, 255, 0.5)'); 
+        gradient.addColorStop(1, 'rgba(0, 255, 65, 0.0)');  
+        
+        vCtx.fillStyle = gradient;
+        vCtx.fill();
+
+        vCtx.strokeStyle = '#00f3ff';
+        vCtx.lineWidth = 2;
+        vCtx.stroke();
+
+        const avg = total / (data.length / 2);
+        const db = (20 * Math.log10((avg || 1) / 255)).toFixed(1);
+        document.getElementById('db-level').innerText = `${db} dB`;
+    }
+
     draw();
 }
 
-function startStats(pc) {
-    statsInterval = setInterval(async () => {
+/* STATS */
+async function startStats(pc){
+    if (statsInterval) clearInterval(statsInterval);
+
+    setTimeout(async () => {
         const stats = await pc.getStats();
-        stats.forEach(r => {
-            if (r.type === 'remote-inbound-rtp') {
-                document.getElementById('stat-latency').innerText = Math.round(r.roundTripTime * 1000) + 'ms';
-                document.getElementById('stat-loss').innerText = r.packetsLost || 0;
+        extractNetworkInfo(stats);
+    }, 2000);
+
+    statsInterval = setInterval(async()=>{
+        const stats = await pc.getStats();
+        
+        stats.forEach(r=>{
+            if(r.type === 'remote-inbound-rtp'){
+                const rtt = Math.round(r.roundTripTime * 1000);
+                latencyHistory.push(rtt);
+                if(latencyHistory.length > 30) latencyHistory.shift();
+
+                const avg = Math.round(latencyHistory.reduce((a,b)=>a+b,0) / latencyHistory.length);
+
+                document.getElementById('lat-avg').innerText = avg + 'ms';
+                document.getElementById('loss').innerText = r.packetsLost || 0;
+
+                const jitter = r.jitter ? (r.jitter * 1000).toFixed(1) : '--';
+                document.getElementById('jitter').innerText = jitter + 'ms';
+
+                updateQuality(avg, r.packetsLost || 0);
             }
         });
-    }, 2000);
+
+        extractNetworkInfo(stats);
+    }, 2500);
 }
 
-function endCall() {
-    if(currentCall) currentCall.close();
+/* QUALITY */
+function updateQuality(avg, loss){
+    let quality = "OPTIMAL";
+    let color = "var(--primary)";
+
+    if(avg > 150 || loss > 10){
+        quality = "DEGRADED";
+        color = "var(--danger)";
+    }
+    else if(avg > 80 || loss > 3){
+        quality = "ACCEPTABLE";
+        color = "orange";
+    }
+    
+    const qEl = document.getElementById('quality');
+    qEl.innerText = quality;
+    qEl.style.color = color;
+}
+
+/* NETWORK INFO */
+function extractNetworkInfo(stats){
+    let localCandidate = null;
+    let remoteCandidate = null;
+
+    stats.forEach(report=>{
+        if(report.type === "candidate-pair" && report.state === "succeeded"){
+            localCandidate = stats.get(report.localCandidateId);
+            remoteCandidate = stats.get(report.remoteCandidateId);
+            
+            const tps = `${localCandidate.candidateType} > ${remoteCandidate.candidateType}`;
+            document.getElementById("transport").innerText = tps.toUpperCase();
+        }
+    });
+
+    if(localCandidate){
+        const localIP = localCandidate.address || localCandidate.ip || "[MASKED]";
+        document.getElementById("local-ip").innerText = localIP;
+
+        if(localIP.startsWith("172.") || localIP.startsWith("10.") || localIP.startsWith("192.168") || localIP.startsWith("fd") || localIP.startsWith("fc")){
+            document.getElementById("network-type").innerText = "LAN / TUNNEL";
+        }
+        else if(localIP.includes(":")){
+            document.getElementById("network-type").innerText = "IPV6 DIRECT";
+        }
+        else{
+            document.getElementById("network-type").innerText = "WAN PUBLIC";
+        }
+    }
+    
+    if(remoteCandidate){
+        const remoteIP = remoteCandidate.address || remoteCandidate.ip || "---";
+        document.getElementById("remote-ip").innerText = remoteIP;
+    }
+}
+
+/* END */
+function endCall(){
+    if(currentCall){
+        currentCall.close();
+    }
     cleanup();
 }
 
-function cleanup() {
-    if(localStream) localStream.getTracks().forEach(t => t.stop());
-    if(animationId) clearTimeout(animationId); // Clear the 30fps timeout
-    if(audioCtx) audioCtx.close();
-    if(statsInterval) clearInterval(statsInterval);
+/* CLEANUP */
+function cleanup(){
+    if(localStream){
+        localStream.getTracks().forEach(t=>t.stop());
+    }
+
+    if(statsInterval){
+        clearInterval(statsInterval);
+        statsInterval = null;
+    }
+
+    if(vizAnimationId){
+        cancelAnimationFrame(vizAnimationId);
+        vizAnimationId = null;
+    }
+
+    stopCallTimer();
+
+    if (localAudioCtx) {
+        localAudioCtx.close();
+        localAudioCtx = null;
+    }
+    if (remoteAudioCtx) {
+        remoteAudioCtx.close();
+        remoteAudioCtx = null;
+    }
+    
+    const vizCanvas = document.getElementById('viz-canvas');
+    const vCtx = vizCanvas.getContext('2d');
+    vCtx.clearRect(0, 0, vizCanvas.width, vizCanvas.height);
+    document.getElementById('db-level').innerText = '-- dB';
+    
+    // Clear IPs on cleanup
+    document.getElementById('local-ip').innerText = "---";
+    document.getElementById('remote-ip').innerText = "---";
+
     document.getElementById('call-stage').style.display = 'none';
     document.getElementById('call-controls').style.display = 'block';
 }
 
-function copyID() {
-    navigator.clipboard.writeText(document.getElementById('my-id').innerText);
+/* COPY */
+function copyID(){
+    const idText = document.getElementById('my-id').innerText;
+    navigator.clipboard.writeText(idText);
+    
+    const btn = document.querySelector('.copy-btn');
+    const originalText = btn.innerText;
+    btn.innerText = "COPIED!";
+    btn.style.color = "var(--primary)";
+    btn.style.borderColor = "var(--primary)";
+    
+    setTimeout(()=>{
+        btn.innerText = originalText;
+        btn.style.color = "";
+        btn.style.borderColor = "";
+    }, 2000);
 }
 
-window.addEventListener('resize', () => {
+/* RESIZE */
+window.addEventListener('resize', ()=>{
     w = canvas.width = window.innerWidth;
     h = canvas.height = window.innerHeight;
+    
+    const newCols = Math.floor(w / fontSize);
+    if(newCols > drops.length){
+        for(let i = drops.length; i < newCols; i++) drops.push(1);
+    } else if (newCols < drops.length) {
+        drops.length = newCols; 
+    }
+
+    const vizCanvas = document.getElementById('viz-canvas');
+    if (vizCanvas) {
+        vizCanvas.width = vizCanvas.offsetWidth;
+        vizCanvas.height = vizCanvas.offsetHeight;
+    }
 });
+
 </script>
-
-<style>
-@keyframes pulse { 50% { opacity: 0.2; } }
-</style>
-
 </body>
 </html>
