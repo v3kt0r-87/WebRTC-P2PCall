@@ -1,41 +1,36 @@
 # P2P Voice Call (WebRTC & PeerJS)
 
-This is a part-time project created when Telegram wasn’t working during gaming sessions (such as “Dying Light”). The goal was to build a simple browser-based peer-to-peer voice calling prototype using WebRTC and PeerJS.
+This is a lightweight browser-based peer-to-peer voice calling application built using WebRTC and PeerJS, designed for zero-latency communication during gaming sessions or when standard VOIP apps fail.
 
-[View Page](https://v3kt0r-87.github.io/WebRTC-P2PCall/)
+[View Live App](https://v3kt0r-87.github.io/WebRTC-P2PCall/)
 
-## What It Does
+## Features
 
-- Generates a unique Peer ID for each user.
-- Allows two users to connect directly and exchange audio via WebRTC.
-- Provides status updates during connection, call, and disconnection.
-- Uses a minimal dark-themed interface focused on simplicity and performance.
-- Runs fully in the browser with no backend setup required.
+- **P2P Audio Communication:** Direct WebRTC browser-to-browser voice streaming with no intermediate audio servers.
+- **Hardware Audio Processing:** Real-time toggles for Noise Suppression and Echo Cancellation via WebRTC track constraints.
+- **Microphone Mute & Hotkey:** Quick mic mute toggle with keyboard shortcut support (<kbd>M</kbd> to mute, <kbd>Esc</kbd> to end/decline).
+- **Call Management:** Incoming call accept/decline prompt with zero-latency synthesized Web Audio ringtones and connect chimes.
+- **Direct Invite Links:** Share one-click join links (`?call=USERNAME`) for quick party setup.
+- **Audio Dynamic Compression & Gain:** Gain slider (0x to 3.0x) with dynamics compression to prevent clipping.
+- **Live Telemetry & Diagnostics:** Real-time stats for average RTT latency, jitter, packet loss, connection integrity, network routing type, and IP resolution.
+- **Audio Visualizer:** Dynamic HTML5 canvas waveform visualizer.
+- **Session Persistence:** Remembers your chosen username via local storage.
+
+## Keyboard Shortcuts
+
+| Key | Action |
+| --- | --- |
+| <kbd>Enter</kbd> | Submit username / Initiate call |
+| <kbd>M</kbd> | Toggle Microphone Mute / Live |
+| <kbd>Esc</kbd> | Cancel outgoing call / Decline incoming / Terminate active call |
 
 ## Technologies Used
 
-- WebRTC
-- PeerJS
-- HTML5
-- CSS3
-- Vanilla JavaScript
-
-## Performance & Readability
-
-- Lightweight and fast-loading.
-- Minimal DOM operations for better responsiveness.
-- Audio-only communication keeps bandwidth usage low.
-- Clean and readable code structure for easy modification and learning.
-- Optimized for simple one-to-one peer communication.
-
-## Why This Was Made
-
-A quick solution was needed for voice communication when other apps failed during gaming sessions. What started as a small experiment evolved into a functional browser-based P2P voice calling prototype.
-
-## Contributing
-
-Pull requests are always welcome!  
-Feel free to improve the UI, optimize the logic, or expand the functionality.
+- **WebRTC** (Real-Time Communications)
+- **PeerJS** (P2P Signaling)
+- **Web Audio API** (Audio graph processing, compression, visualizer, sound cues)
+- **HTML5 & Vanilla CSS3** (Matrix digital rain canvas, cyber glassmorphism terminal)
+- **Vanilla JavaScript** (Zero framework bloat)
 
 ## License
 
